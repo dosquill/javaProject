@@ -1,7 +1,6 @@
 /*
 		TODO
-	-Problema query6
-	-Messaggio di errore nella modifica di una tessera
+
 */
 
 package progettoJava;
@@ -64,7 +63,7 @@ public class GUI {
 	    		+ "HAVING t.IncassoTotale > 50\r\n"
 	    		+ ";";
 	    
-	private String query6 = "SELECT *\r\n"
+	private String query6 = "SELECT t.Citta, t.Nome, t.IncassoTotale\r\n"
 	    		+ "FROM Torneo as t\r\n"
 	    		+ "GROUP BY t.Nome, t.Citta\r\n"
 	    		+ "HAVING t.IncassoTotale >= ALL (\r\n"
@@ -220,32 +219,32 @@ public class GUI {
 				}
 
 				case "Query 4" ->{
-					queryExecuted = query3;
+					queryExecuted = query4;
 					descrizione = "Stampare la media di età tra i tennisti maschi e tennisti femmine\r\n"
 							+ "";
 				}
 				
 				case "Query 5" ->{
-					queryExecuted = query3;
+					queryExecuted = query5;
 					descrizione = "Stampare i tornei il cui Incasso Totale è maggiore di 50\r\n"
 							+ "";
 				}
 				
 				case "Query 6" ->{
-					queryExecuted = query3;
+					queryExecuted = query6;
 					descrizione = "Stampare il torneo che possiede l'incasso totale più alto\r\n"
 							+ "";
 				}
 				
 				case "Query 7" ->{
-					queryExecuted = query3;
+					queryExecuted = query7;
 					descrizione = "Selezionare il nome e la città dei tornei che non si svolgono a Marzo\r\n"
 							+ "";
 				}
 				
 				case "Query 8" ->{
-					queryExecuted = query3;
-					descrizione = "Stampare tessera, nome e cognome di tutti i tennisti che partecipano al torneo nella città di Pagani*\r\n"
+					queryExecuted = query8;
+					descrizione = "Tessera, nome e cognome di tutti i tennisti che partecipano ai tornei di Pagani\r\n"
 							+ "";
 				}
 				
@@ -264,9 +263,6 @@ public class GUI {
 					
 					while (result.next()) {						
 						for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-							if (i > 1)
-								System.out.println(", ");
-							
 							if (k == i) {
 								textAreaTop.append(rsmd.getColumnName(k) + "\t");								
 								k++;
@@ -309,10 +305,7 @@ public class GUI {
 					int k = 1;
 					
 					while (result.next()) {						
-						for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-							if (i > 1)
-								System.out.println(", ");
-							
+						for (int i = 1; i <= rsmd.getColumnCount(); i++) {							
 							if (k == i) {
 								textAreaTop.append(rsmd.getColumnName(k) + "\t");								
 								k++;
@@ -343,23 +336,37 @@ public class GUI {
 				int tessera = Integer.parseInt(textFieldTessera.getText());
 				int eta  = Integer.parseInt(textFieldEta.getText());
 				
-				String sql = "UPDATE Tennista\r\n"
+				String updateQuery = "UPDATE Tennista\r\n"
 						+ "SET Tennista.Eta = " + eta + "\r\n" 
 						+ "WHERE Tennista.Tessera = " + tessera + ";";
 				
+				String queryRichiestaTessera = "SELECT t.Tessera FROM Tennista as t WHERE t.Tessera = \"" + tessera + "\" ;" ;
+				
 				try {
 					Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);	
-					PreparedStatement statement = connection.prepareStatement(sql);
-					statement.executeUpdate();
-										
-					System.out.println("modifica avvenuta");
 					
-					statement.close();
+					PreparedStatement verificaTessera = connection.prepareStatement(queryRichiestaTessera);
+					ResultSet result = verificaTessera.executeQuery(queryRichiestaTessera);
+					
+					// evento che triggera l'exception
+					if (result.next())
+						System.out.println(result.getString(1));						
+					
+					PreparedStatement editStatement = connection.prepareStatement(updateQuery);
+					editStatement.executeUpdate();
+										
+					
+					JOptionPane.showMessageDialog(null, "Modifica avvenuta");
+					
+					editStatement.close();
 					connection.close();
 					stampaButton.doClick();
 				} catch (SQLException ex) {
-					System.out.println("Cannot connect");
+					JOptionPane.showMessageDialog(null, "Tessera non valida");
 					ex.printStackTrace();
+				} catch (NumberFormatException n) {
+					JOptionPane.showMessageDialog(null, "Formato tessera non valida");
+					n.printStackTrace();
 				}
 				
 			}
@@ -374,11 +381,18 @@ public class GUI {
 			
 				try {
 					int tessera = Integer.parseInt(textFieldTessera.getText());
+					
 					String update1 = "SET FOREIGN_KEY_CHECKS=0;";
 					String sql = "DELETE FROM Tennista WHERE Tennista.Tessera = " + tessera + ";";
 					String update2 = "SET FOREIGN_KEY_CHECKS=1;";
+					String queryRichiestaTessera = "SELECT t.Tessera FROM Tennista as t WHERE t.Tessera = \"" + tessera + "\" ;" ;
 
+					
 					Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);	
+
+					PreparedStatement verificaTessera = connection.prepareStatement(queryRichiestaTessera);
+					ResultSet result = verificaTessera.executeQuery(queryRichiestaTessera);		
+					
 					PreparedStatement statementUpd1 = connection.prepareStatement(update1);
 					PreparedStatement statement = connection.prepareStatement(sql);
 					PreparedStatement statementUpd2 = connection.prepareStatement(update2);
@@ -387,11 +401,17 @@ public class GUI {
 					statement.executeUpdate();
 					statementUpd2.executeUpdate();
 					
+					JOptionPane.showMessageDialog(null, "Rimozione avvenuta");
+					
 					statement.close();
 					connection.close();
+					result.close();
 					stampaButton.doClick();
 				} catch (SQLException ex) {
-					System.out.println("Cannot connect");
+					JOptionPane.showMessageDialog(null, "Tessera non valida");
+					ex.printStackTrace();
+				} catch (NumberFormatException ex) {
+					JOptionPane.showMessageDialog(null, "Formato tessera non valida");
 					ex.printStackTrace();
 				}
 			

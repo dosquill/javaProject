@@ -7,6 +7,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -16,6 +17,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.awt.event.ActionEvent;
 
 public class addFrame extends JFrame {
@@ -128,10 +130,13 @@ public class addFrame extends JFrame {
 					
 					statement.close();
 					connection.close();
+				} catch (SQLIntegrityConstraintViolationException c) {
+					c.printStackTrace();
+					JOptionPane.showMessageDialog(null, "Tessera tennista già presente");
 				} catch (SQLException ex) {
-					System.out.println("Cannot connect");
 					ex.printStackTrace();
 				}
+				
 			}
 		});
 		
